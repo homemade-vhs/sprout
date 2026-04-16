@@ -239,8 +239,9 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
   min-height: 56px;
 }
 .tray-cell:hover { border-color: var(--accent); background: #252525; }
-.tray-cell.occupied { border-style: solid; color: var(--text); background: var(--surface); position: relative; flex-direction: column; }
-.tray-cell-icon { width: 70%; height: 70%; object-fit: contain; }
+.tray-cell.occupied { border: none; background: none; position: relative; flex-direction: column; color: var(--text); padding: 0; }
+.tray-cell.occupied:hover { background: none; }
+.tray-cell-icon { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-sm); }
 .tray-cell-label { font-size: 0.55rem; color: var(--text-dim); position: absolute; bottom: 2px; right: 3px; line-height: 1; }
 
 /* Tray tabs (mobile toggle) */
@@ -1198,12 +1199,10 @@ function renderTray() {
         const plant = trayPlants[key];
         if (plant) {
           const variety = getVariety(plant.varietyId);
-          const catColor = getCategoryColor(variety?.category);
-          const stageColor = getStageColor(plant.stage);
           const iconHtml = variety?.icon
             ? `<img src="${variety.icon}" alt="${variety.name}" class="tray-cell-icon">`
             : `<span>${variety?.name || '?'}</span>`;
-          html += `<div class="tray-cell occupied" style="border-color:${stageColor};background:${catColor}22" data-tray-cell="${cellLabel}" data-tray-num="${trayNum}" title="${varietyFullName(variety)} — ${STAGE_LABELS[plant.stage]}">
+          html += `<div class="tray-cell occupied" data-tray-cell="${cellLabel}" data-tray-num="${trayNum}" title="${varietyFullName(variety)} — ${STAGE_LABELS[plant.stage]}">
             ${iconHtml}<span class="tray-cell-label">${cellLabel}</span>
           </div>`;
         } else {
