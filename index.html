@@ -1117,7 +1117,141 @@ function compressImage(file, maxKB) {
   });
 }
 
-function renderTray() {}
+// ---- Render: Tray View ----
+function renderTray() {
+  const grid = document.getElementById('tray-grid');
+  const legend = document.getElementById('tray-legend');
+
+  // Build a map: tray cell label -> plant
+  const trayPlants = {};
+  state.plants.forEach(p => {
+    const loc = p.location.toLowerCase();
+    // Match "tray cell X" patterns
+    const m = loc.match(/tray\s*cell\s*(.+)/i);
+    if (m) {
+      trayPlants[m[1].trim().toUpperCase()] = p;
+    }
+  });
+
+  const rows = 'ABCDEFGH';
+  let html = '';
+  for (let r = 0; r < 8; r++) {
+    for (let c = 1; c <= 10; c++) {
+      const cellLabel = `${rows[r]}${c}`;
+      const plant = trayPlants[cellLabel];
+      if (plant) {
+        const variety = getVariety(plant.varietyId);
+        const catColor = getCategoryColor(variety?.category);
+        const stageColor = getStageColor(plant.stage);
+        html += `<div class="tray-cell occupied" style="border-color:${stageColor};background:${catColor}22" data-tray-cell="${cellLabel}" title="${variety?.name || 'Unknown'} — ${STAGE_LABELS[plant.stage]}">
+          <span>${variety?.name?.split(' ').pop() || '?'}<br><span style="font-size:0.6rem">${cellLabel}</span></span>
+        </div>`;
+      } else {
+        html += `<div class="tray-cell" data-tray-cell="${cellLabel}"><span class="text-muted">${cellLabel}</span></div>`;
+      }
+    }
+  }
+  grid.innerHTML = html;
+
+  // Legend
+  legend.innerHTML = `
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
+      <span>Stages: </span>
+      ${STAGES.filter(s => s !== 'done').map(s => `<span><span style="display:inline-block;width:10px;height:10px;background:${getStageColor(s)};border-radius:50%;margin-right:4px"></span>${STAGE_LABELS[s]}</span>`).join('')}
+    </div>
+  `;
+
+  // Click handlers
+  grid.querySelectorAll('.tray-cell').forEach(cell => {
+    cell.addEventListener('click', () => openTrayCellModal(cell.dataset.trayCell));
+  });
+}
+
+function getStageColor(stage) {
+  const colors = { germinating: '#fbbf24', seedling: '#4ade80', transplanted: '#22c55e', flowering: '#e879f9', harvesting: '#f87171', done: '#999' };
+  return colors[stage] || '#999';
+}
+
+function getCategoryColor(cat) {
+  const colors = { fruiting_veg: '#ef4444', leafy_green: '#22c55e', herb: '#4ade80', root: '#f59e0b' };
+  return colors[cat] || '#666';
+}
+
+function openTrayCellModal(cellLabel) {
+  const content = document.getElementById('tray-cell-content');
+  // Find plant at this cell
+  const plant = state.plants.find(p => {
+    const m = p.location.match(/tray\s*cell\s*(.+)/i);
+    return m && m[1].trim().toUpperCase() === cellLabel;
+  });
+
+  if (plant) {
+    const variety = getVariety(plant.varietyId);
+    content.innerHTML = `
+      <button class="btn-icon modal-close" onclick="closeModal('modal-tray-cell')">✕</button>
+      <h2>Cell ${cellLabel}</h2>
+      <p class="mt-1"><strong>${variety?.name || 'Unknown'}</strong></p>
+      <p><span class="stage-badge stage-${plant.stage}">${STAGE_LABELS[plant.stage]}</span></p>
+      <p class="text-sm text-dim mt-1">Planted ${daysSince(plant.plantedDate)} days ago • 💧 ${lastWateredText(plant)}</p>
+      <div class="flex gap-sm mt-2">
+        <button class="btn-primary" id="tray-cell-detail">View Detail</button>
+        <button class="btn-secondary" id="tray-cell-water">💧 Water</button>
+        <button class="btn-danger" id="tray-cell-remove">Remove from Tray</button>
+      </div>
+    `;
+    content.querySelector('#tray-cell-detail')?.addEventListener('click', () => {
+      closeModal('modal-tray-cell');
+      openPlantDetail(plant.id);
+    });
+    content.querySelector('#tray-cell-water')?.addEventListener('click', () => {
+      waterPlant(plant.id);
+      closeModal('modal-tray-cell');
+      renderTray();
+    });
+    content.querySelector('#tray-cell-remove')?.addEventListener('click', () => {
+      if (confirm('Remove this plant from the tray? (The plant record will remain, but its location will be cleared.)')) {
+        updatePlant(plant.id, { location: 'Unassigned' });
+        closeModal('modal-tray-cell');
+        renderTray();
+      }
+    });
+  } else {
+    // Empty cell — offer to assign a plant
+    const unassigned = state.plants.filter(p => {
+      const loc = p.location.toLowerCase();
+      return p.stage === 'germinating' && !loc.startsWith('tray cell');
+    });
+    content.innerHTML = `
+      <button class="btn-icon modal-close" onclick="closeModal('modal-tray-cell')">✕</button>
+      <h2>Cell ${cellLabel}</h2>
+      <p class="text-dim mt-1">This cell is empty.</p>
+      ${unassigned.length > 0 ? `
+        <div class="form-group mt-2">
+          <label>Assign a plant:</label>
+          <select id="tray-cell-assign-select">
+            ${unassigned.map(p => {
+              const v = getVariety(p.varietyId);
+              return `<option value="${p.id}">${v?.name || 'Unknown'} (${escHtml(p.location)})</option>`;
+            }).join('')}
+          </select>
+        </div>
+        <button class="btn-primary mt-1" id="tray-cell-assign">Assign to ${cellLabel}</button>
+      ` : `
+        <p class="text-sm text-dim mt-2">No unassigned germinating plants to place here.<br>Add a plant first from the Dashboard.</p>
+      `}
+    `;
+    content.querySelector('#tray-cell-assign')?.addEventListener('click', () => {
+      const plantId = document.getElementById('tray-cell-assign-select').value;
+      if (plantId) {
+        updatePlant(plantId, { location: `Tray cell ${cellLabel}` });
+        closeModal('modal-tray-cell');
+        renderTray();
+      }
+    });
+  }
+
+  openModal('modal-tray-cell');
+}
 function renderVarieties() {}
 function renderSettings() {}
 
