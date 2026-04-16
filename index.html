@@ -240,6 +240,9 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
 }
 .tray-cell:hover { border-color: var(--accent); background: #252525; }
 .tray-cell.occupied { border-style: solid; color: var(--text); background: var(--surface); }
+.tray-cell-icon { width: 70%; height: 70%; object-fit: contain; }
+.tray-cell-label { font-size: 0.55rem; color: var(--text-dim); position: absolute; bottom: 2px; right: 3px; line-height: 1; }
+.tray-cell.occupied { position: relative; flex-direction: column; }
 
 /* ============================================================
    VARIETY TABLE
@@ -508,7 +511,7 @@ const CATEGORIES = {
 // ---- Variety Database ----
 const DEFAULT_VARIETIES = [
   {
-    id: 'tomato-large-red-cherry', type: 'Tomato', name: 'Large Red Cherry', category: 'fruiting_veg',
+    id: 'tomato-large-red-cherry', type: 'Tomato', name: 'Large Red Cherry', category: 'fruiting_veg', icon: 'Icons/tomato-cherry.png',
     startMethod: 'tray', germinationDays: [5, 10], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: [4, 6], potSizeGallons: 5,
     daysToHarvest: [65, 80], harvestFrom: 'transplant', waterFrequencyDays: 2,
@@ -516,7 +519,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Pinch suckers for bushier growth', 'Stake or cage when transplanting', 'Pick when fully red']
   },
   {
-    id: 'tomato-yellow-pear', type: 'Tomato', name: 'Yellow Pear', category: 'fruiting_veg',
+    id: 'tomato-yellow-pear', type: 'Tomato', name: 'Yellow Pear', category: 'fruiting_veg', icon: 'Icons/tomato-pear.png',
     startMethod: 'tray', germinationDays: [5, 10], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: [4, 6], potSizeGallons: 5,
     daysToHarvest: [70, 80], harvestFrom: 'transplant', waterFrequencyDays: 2,
@@ -524,7 +527,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Very prolific producer', 'Great for snacking and salads', 'Indeterminate — needs support']
   },
   {
-    id: 'pepper-anaheim', type: 'Pepper', name: 'Anaheim', category: 'fruiting_veg',
+    id: 'pepper-anaheim', type: 'Pepper', name: 'Anaheim', category: 'fruiting_veg', icon: 'Icons/pepper-anaheim.png',
     startMethod: 'tray', germinationDays: [7, 14], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: [6, 8], potSizeGallons: 5,
     daysToHarvest: [75, 80], harvestFrom: 'transplant', waterFrequencyDays: 2,
@@ -532,7 +535,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Mild heat, great for roasting', 'Pick green or wait for red', 'Needs warm soil to germinate']
   },
   {
-    id: 'pepper-cayenne', type: 'Pepper', name: 'Cayenne', category: 'fruiting_veg',
+    id: 'pepper-cayenne', type: 'Pepper', name: 'Cayenne', category: 'fruiting_veg', icon: 'Icons/pepper-cayenne.png',
     startMethod: 'tray', germinationDays: [8, 14], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: [6, 8], potSizeGallons: 3,
     daysToHarvest: [70, 85], harvestFrom: 'transplant', waterFrequencyDays: 2,
@@ -540,7 +543,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Hot pepper — use gloves when handling', 'Dry or freeze extras', 'Very productive in containers']
   },
   {
-    id: 'pepper-california-wonder', type: 'Pepper', name: 'California Wonder', category: 'fruiting_veg',
+    id: 'pepper-california-wonder', type: 'Pepper', name: 'California Wonder', category: 'fruiting_veg', icon: 'Icons/pepper-california-wonder.png',
     startMethod: 'tray', germinationDays: [7, 14], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: [6, 8], potSizeGallons: 5,
     daysToHarvest: [75, 90], harvestFrom: 'transplant', waterFrequencyDays: 2,
@@ -548,7 +551,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Classic bell pepper', 'Green turns red if left on plant', 'Heavy feeder — fertilize regularly']
   },
   {
-    id: 'cucumber-boston-pickling', type: 'Cucumber', name: 'Boston Pickling', category: 'fruiting_veg',
+    id: 'cucumber-boston-pickling', type: 'Cucumber', name: 'Boston Pickling', category: 'fruiting_veg', icon: 'Icons/cucumber.png',
     startMethod: 'direct_sow', germinationDays: [4, 8], preGermMethod: 'soak_8h',
     plantDepth: '½ inch', trayToPotWeeks: null, potSizeGallons: 7,
     daysToHarvest: [55, 65], harvestFrom: 'sprout', waterFrequencyDays: 1,
@@ -556,7 +559,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Provide a trellis for climbing', 'Pick small for pickling', 'Water consistently — they get bitter if stressed']
   },
   {
-    id: 'watermelon-crimson-sweet', type: 'Watermelon', name: 'Crimson Sweet', category: 'fruiting_veg',
+    id: 'watermelon-crimson-sweet', type: 'Watermelon', name: 'Crimson Sweet', category: 'fruiting_veg', icon: 'Icons/watermelon.png',
     startMethod: 'direct_sow', germinationDays: [6, 10], preGermMethod: 'soak_8h',
     plantDepth: '1 inch', trayToPotWeeks: null, potSizeGallons: 15,
     daysToHarvest: [80, 90], harvestFrom: 'sprout', waterFrequencyDays: 2,
@@ -564,7 +567,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Needs lots of space — let vines trail', 'Thump test: hollow sound = ripe', 'Reduce watering near harvest for sweeter fruit']
   },
   {
-    id: 'okra-clemson-spineless', type: 'Okra', name: 'Clemson Spineless', category: 'fruiting_veg',
+    id: 'okra-clemson-spineless', type: 'Okra', name: 'Clemson Spineless', category: 'fruiting_veg', icon: 'Icons/okra.png',
     startMethod: 'direct_sow', germinationDays: [5, 14], preGermMethod: 'soak_8h',
     plantDepth: '¾ inch', trayToPotWeeks: null, potSizeGallons: 5,
     daysToHarvest: [55, 65], harvestFrom: 'sprout', waterFrequencyDays: 2,
@@ -572,7 +575,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Loves heat — perfect for LA', 'Pick pods at 3 inches for tenderness', 'Soaking seeds speeds germination significantly']
   },
   {
-    id: 'cabbage-golden-acre', type: 'Cabbage', name: 'Golden Acre', category: 'leafy_green',
+    id: 'cabbage-golden-acre', type: 'Cabbage', name: 'Golden Acre', category: 'leafy_green', icon: 'Icons/cabbage.png',
     startMethod: 'tray', germinationDays: [4, 10], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: [4, 6], potSizeGallons: 5,
     daysToHarvest: [60, 70], harvestFrom: 'transplant', waterFrequencyDays: 2,
@@ -580,7 +583,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Compact heads, good for containers', 'Watch for cabbage worms', 'Harvest when head feels firm']
   },
   {
-    id: 'basil-italian-large-leaf', type: 'Basil', name: 'Italian Large Leaf', category: 'herb',
+    id: 'basil-italian-large-leaf', type: 'Basil', name: 'Italian Large Leaf', category: 'herb', icon: 'Icons/basil.png',
     startMethod: 'tray', germinationDays: [5, 10], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: [3, 4], potSizeGallons: 2,
     daysToHarvest: [60, 75], harvestFrom: 'sprout', waterFrequencyDays: 1,
@@ -588,7 +591,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Pinch flower buds to prolong harvest', 'Harvest from the top down', 'Companion plant with tomatoes']
   },
   {
-    id: 'carrot-scarlet-nantes', type: 'Carrot', name: 'Scarlet Nantes', category: 'root',
+    id: 'carrot-scarlet-nantes', type: 'Carrot', name: 'Scarlet Nantes', category: 'root', icon: 'Icons/carrot.png',
     startMethod: 'direct_sow', germinationDays: [10, 21], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: null, potSizeGallons: 5,
     daysToHarvest: [65, 75], harvestFrom: 'sprout', waterFrequencyDays: 2,
@@ -596,7 +599,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Needs deep loose soil — at least 12 inches', 'Thin seedlings to 2 inches apart', 'Tops poking out of soil means ready to check']
   },
   {
-    id: 'radish-french-breakfast', type: 'Radish', name: 'French Breakfast', category: 'root',
+    id: 'radish-french-breakfast', type: 'Radish', name: 'French Breakfast', category: 'root', icon: 'Icons/raddish.png',
     startMethod: 'direct_sow', germinationDays: [3, 7], preGermMethod: null,
     plantDepth: '½ inch', trayToPotWeeks: null, potSizeGallons: 2,
     daysToHarvest: [25, 30], harvestFrom: 'sprout', waterFrequencyDays: 1,
@@ -604,7 +607,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Fastest veggie to harvest!', 'Sow every 2 weeks for continuous harvest', 'Gets pithy if left too long']
   },
   {
-    id: 'lettuce-romaine', type: 'Lettuce', name: 'Romaine', category: 'leafy_green',
+    id: 'lettuce-romaine', type: 'Lettuce', name: 'Romaine', category: 'leafy_green', icon: 'Icons/lettuce.png',
     startMethod: 'direct_sow', germinationDays: [4, 10], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: null, potSizeGallons: 3,
     daysToHarvest: [60, 75], harvestFrom: 'sprout', waterFrequencyDays: 1,
@@ -612,7 +615,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Cut-and-come-again: harvest outer leaves', 'Bolts in heat — provide afternoon shade in LA', 'Light surface sowing — seeds need light']
   },
   {
-    id: 'beet-chioggia', type: 'Beet', name: 'Chioggia', category: 'root',
+    id: 'beet-chioggia', type: 'Beet', name: 'Chioggia', category: 'root', icon: 'Icons/beet.png',
     startMethod: 'direct_sow', germinationDays: [5, 10], preGermMethod: 'soak_4h',
     plantDepth: '½ inch', trayToPotWeeks: null, potSizeGallons: 5,
     daysToHarvest: [55, 65], harvestFrom: 'sprout', waterFrequencyDays: 2,
@@ -620,7 +623,7 @@ const DEFAULT_VARIETIES = [
     tips: ['Beautiful candy-stripe interior', 'Greens are edible too!', 'Thin to 3 inches apart', 'Soaking speeds up germination']
   },
   {
-    id: 'dill-mammoth-long-island', type: 'Dill', name: 'Mammoth Long Island', category: 'herb',
+    id: 'dill-mammoth-long-island', type: 'Dill', name: 'Mammoth Long Island', category: 'herb', icon: 'Icons/dill.png',
     startMethod: 'direct_sow', germinationDays: [7, 14], preGermMethod: null,
     plantDepth: '¼ inch', trayToPotWeeks: null, potSizeGallons: 3,
     daysToHarvest: [40, 60], harvestFrom: 'sprout', waterFrequencyDays: 2,
@@ -1175,8 +1178,11 @@ function renderTray() {
           const variety = getVariety(plant.varietyId);
           const catColor = getCategoryColor(variety?.category);
           const stageColor = getStageColor(plant.stage);
+          const iconHtml = variety?.icon
+            ? `<img src="${variety.icon}" alt="${variety.name}" class="tray-cell-icon">`
+            : `<span>${variety?.name || '?'}</span>`;
           html += `<div class="tray-cell occupied" style="border-color:${stageColor};background:${catColor}22" data-tray-cell="${cellLabel}" data-tray-num="${trayNum}" title="${varietyFullName(variety)} — ${STAGE_LABELS[plant.stage]}">
-            <span>${variety?.name || '?'}<br><span style="font-size:0.6rem">${cellLabel}</span></span>
+            ${iconHtml}<span class="tray-cell-label">${cellLabel}</span>
           </div>`;
         } else {
           html += `<div class="tray-cell" data-tray-cell="${cellLabel}" data-tray-num="${trayNum}"><span class="text-muted">${cellLabel}</span></div>`;
