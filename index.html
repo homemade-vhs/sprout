@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprout — Plant Tracker</title>
+<meta name="description" content="Track your container garden from seed to harvest.">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="manifest" href="manifest.json">
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #1a1a1a;
+  --surface: #252525;
+  --surface-hover: #2e2e2e;
+  --surface-active: #333;
+  --border: #3a3a3a;
+  --text: #e0e0e0;
+  --text-dim: #999;
+  --text-muted: #666;
+  --accent: #4ade80;
+  --accent-dim: #22c55e;
+  --accent-bg: rgba(74, 222, 128, 0.1);
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --transition: 200ms ease;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; }
+body { min-height: 100dvh; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button {
+  font-family: inherit;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: background var(--transition), transform var(--transition);
+}
+button:active { transform: scale(0.97); }
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 0.875rem;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: border-color var(--transition);
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn-primary {
+  background: var(--accent);
+  color: #111;
+  font-weight: 600;
+}
+.btn-primary:hover { background: var(--accent-dim); }
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--surface-hover); }
+
+.btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+.btn-danger:hover { background: var(--danger); color: #fff; }
+
+.btn-icon {
+  background: none;
+  padding: 0.4rem;
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.btn-icon:hover { color: var(--text); }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+#app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* --- Header / Nav --- */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+header h1 .logo { font-size: 1.6rem; }
+
+nav {
+  display: flex;
+  gap: 0.25rem;
+}
+nav button {
+  background: none;
+  color: var(--text-dim);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+nav button:hover { color: var(--text); background: var(--surface); }
+nav button.active { color: var(--accent); background: var(--accent-bg); }
+
+/* --- Views --- */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ============================================================
+   CARDS / GRID
+   ============================================================ */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+  position: relative;
+}
+.card:hover { background: var(--surface-hover); transform: translateY(-1px); }
+
+/* ============================================================
+   FILTER BAR
+   ============================================================ */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.filter-bar select, .filter-bar input {
+  min-width: 140px;
+}
+
+/* ============================================================
+   MODAL / DETAIL VIEW
+   ============================================================ */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  justify-content: center;
+  align-items: start;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+.modal-backdrop.active { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 600px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  position: relative;
+}
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+/* ============================================================
+   TRAY GRID
+   ============================================================ */
+.tray-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  max-width: 600px;
+  margin: 1rem auto;
+}
+.tray-cell {
+  aspect-ratio: 1;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  text-align: center;
+  overflow: hidden;
+  padding: 2px;
+}
+.tray-cell:hover { border-color: var(--accent); }
+.tray-cell.occupied { border-style: solid; }
+
+/* ============================================================
+   VARIETY TABLE
+   ============================================================ */
+.variety-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ============================================================
+   FORM
+   ============================================================ */
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 0.25rem;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+}
+
+/* ============================================================
+   STAGE BADGES
+   ============================================================ */
+.stage-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.stage-germinating  { background: #854d0e33; color: #fbbf24; }
+.stage-seedling     { background: #16653433; color: #4ade80; }
+.stage-transplanted { background: #0e7a3333; color: #22c55e; }
+.stage-flowering    { background: #86198f33; color: #e879f9; }
+.stage-harvesting   { background: #b9171733; color: #f87171; }
+.stage-done         { background: #37373733; color: #999; }
+
+/* ============================================================
+   WATER INDICATOR
+   ============================================================ */
+.water-needed {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 10px;
+  height: 10px;
+  background: var(--danger);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--danger);
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+.settings-section {
+  margin-bottom: 2rem;
+}
+.settings-section h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-dim);
+}
+.empty-state .emoji { font-size: 3rem; margin-bottom: 1rem; }
+.empty-state p { margin-bottom: 1rem; font-size: 1.1rem; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 600px) {
+  header { flex-direction: column; gap: 0.75rem; }
+  nav { width: 100%; justify-content: center; }
+  .card-grid { grid-template-columns: 1fr; }
+  .tray-grid { grid-template-columns: repeat(10, 1fr); gap: 2px; }
+  .tray-cell { font-size: 0.55rem; }
+  .modal { padding: 1rem; }
+}
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+.flex { display: flex; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.gap-sm { gap: 0.5rem; }
+.gap-md { gap: 1rem; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.text-dim { color: var(--text-dim); }
+.text-sm { font-size: 0.8rem; }
+.text-xs { font-size: 0.75rem; }
+.hidden { display: none !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ======== HEADER ======== -->
+  <header>
+    <h1><span class="logo">🌱</span> Sprout</h1>
+    <nav id="main-nav">
+      <button data-view="dashboard" class="active">Dashboard</button>
+      <button data-view="tray">Tray</button>
+      <button data-view="varieties">Varieties</button>
+      <button data-view="settings">Settings</button>
+    </nav>
+  </header>
+
+  <!-- ======== DASHBOARD VIEW ======== -->
+  <section id="view-dashboard" class="view active">
+    <div class="flex-between mb-2">
+      <h2>My Plants</h2>
+      <div class="flex gap-sm">
+        <button class="btn-primary" id="btn-water-all">💧 Water All</button>
+        <button class="btn-primary" id="btn-add-plant">+ Add Plant</button>
+      </div>
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <select id="filter-stage"><option value="">All Stages</option></select>
+      <select id="filter-category"><option value="">All Categories</option></select>
+      <input type="text" id="filter-location" placeholder="Filter by location…">
+    </div>
+    <div id="plant-grid" class="card-grid"></div>
+    <div id="dashboard-empty" class="empty-state hidden">
+      <div class="emoji">🌱</div>
+      <p>No plants yet — let's get growing!</p>
+      <button class="btn-primary" id="btn-add-plant-empty">+ Add Your First Plant</button>
+    </div>
+  </section>
+
+  <!-- ======== TRAY VIEW ======== -->
+  <section id="view-tray" class="view">
+    <div class="flex-between mb-2">
+      <h2>Seed Tray (80 cells)</h2>
+    </div>
+    <div id="tray-grid" class="tray-grid"></div>
+    <div id="tray-legend" class="mt-2 text-sm text-dim"></div>
+  </section>
+
+  <!-- ======== VARIETIES VIEW ======== -->
+  <section id="view-varieties" class="view">
+    <h2 class="mb-2">Variety Reference</h2>
+    <div id="variety-list" class="variety-list"></div>
+  </section>
+
+  <!-- ======== SETTINGS VIEW ======== -->
+  <section id="view-settings" class="view">
+    <h2 class="mb-2">Settings</h2>
+    <div class="settings-section">
+      <h3>Data Management</h3>
+      <div class="flex gap-sm">
+        <button class="btn-secondary" id="btn-export">📤 Export JSON</button>
+        <button class="btn-secondary" id="btn-import">📥 Import JSON</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" class="hidden">
+    </div>
+    <div class="settings-section">
+      <h3>About</h3>
+      <p class="text-sm text-dim">Sprout v1.0 — Track your container garden from seed to harvest.<br>All data stored locally in your browser.</p>
+    </div>
+  </section>
+</div>
+
+<!-- ======== ADD PLANT MODAL ======== -->
+<div class="modal-backdrop" id="modal-add">
+  <div class="modal">
+    <button class="btn-icon modal-close" onclick="closeModal('modal-add')">✕</button>
+    <h2 class="mb-2">Add Plant</h2>
+    <form id="form-add-plant">
+      <div class="form-group">
+        <label for="add-variety">Variety</label>
+        <select id="add-variety" required></select>
+      </div>
+      <div class="form-group">
+        <label for="add-location">Location</label>
+        <input type="text" id="add-location" placeholder="e.g. Tray cell A1, Balcony pot 1" required>
+      </div>
+      <div class="form-group">
+        <label for="add-count">How many?</label>
+        <input type="number" id="add-count" min="1" max="80" value="1">
+      </div>
+      <div class="form-group">
+        <label for="add-date">Planted Date</label>
+        <input type="date" id="add-date">
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%">🌱 Plant!</button>
+    </form>
+  </div>
+</div>
+
+<!-- ======== PLANT DETAIL MODAL ======== -->
+<div class="modal-backdrop" id="modal-detail">
+  <div class="modal" id="detail-content">
+    <!-- populated dynamically -->
+  </div>
+</div>
+
+<!-- ======== TRAY CELL MODAL ======== -->
+<div class="modal-backdrop" id="modal-tray-cell">
+  <div class="modal" id="tray-cell-content">
+    <!-- populated dynamically -->
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SPROUT — Plant Growing Tracker
+// ============================================================
+
+'use strict';
+
+// ---- Constants ----
+const STORAGE_KEY = 'sprout_data';
+const STAGES = ['germinating', 'seedling', 'transplanted', 'flowering', 'harvesting', 'done'];
+const STAGE_LABELS = {
+  germinating: '🌰 Germinating',
+  seedling: '🌱 Seedling',
+  transplanted: '🪴 Transplanted',
+  flowering: '🌸 Flowering',
+  harvesting: '🍅 Harvesting',
+  done: '✅ Done'
+};
+const CATEGORIES = {
+  fruiting_veg: '🍅 Fruiting Veg',
+  leafy_green: '🥬 Leafy Green',
+  herb: '🌿 Herb',
+  root: '🥕 Root'
+};
+
+// ---- Variety Database ----
+// (Phase 2: will be populated here)
+const DEFAULT_VARIETIES = [];
+
+// ---- State ----
+let state = { plants: [], varieties: [], settings: {} };
+
+// ---- Storage helpers ----
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      state = JSON.parse(raw);
+    } else {
+      state = { plants: [], varieties: structuredClone(DEFAULT_VARIETIES), settings: {} };
+      saveState();
+    }
+  } catch (e) {
+    console.error('Failed to load state:', e);
+    state = { plants: [], varieties: structuredClone(DEFAULT_VARIETIES), settings: {} };
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// ---- ID generation ----
+function newId() {
+  return crypto.randomUUID();
+}
+
+// ---- Navigation ----
+function switchView(viewName) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('active'));
+  const view = document.getElementById(`view-${viewName}`);
+  if (view) view.classList.add('active');
+  const navBtn = document.querySelector(`#main-nav button[data-view="${viewName}"]`);
+  if (navBtn) navBtn.classList.add('active');
+  // Render view
+  if (viewName === 'dashboard') renderDashboard();
+  else if (viewName === 'tray') renderTray();
+  else if (viewName === 'varieties') renderVarieties();
+  else if (viewName === 'settings') renderSettings();
+}
+
+// ---- Modal helpers ----
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ---- Render stubs (Phase 3+) ----
+function renderDashboard() {
+  const grid = document.getElementById('plant-grid');
+  const empty = document.getElementById('dashboard-empty');
+  if (state.plants.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+  } else {
+    empty.classList.add('hidden');
+    grid.innerHTML = '<p class="text-dim">Dashboard coming in Phase 3…</p>';
+  }
+}
+function renderTray() {}
+function renderVarieties() {}
+function renderSettings() {}
+
+// ---- Event listeners ----
+function initEvents() {
+  // Nav
+  document.querySelectorAll('#main-nav button').forEach(btn => {
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+
+  // Add plant buttons
+  document.getElementById('btn-add-plant')?.addEventListener('click', () => openModal('modal-add'));
+  document.getElementById('btn-add-plant-empty')?.addEventListener('click', () => openModal('modal-add'));
+
+  // Close modals on backdrop click
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) backdrop.classList.remove('active');
+    });
+  });
+}
+
+// ---- Init ----
+function init() {
+  loadState();
+  initEvents();
+  switchView('dashboard');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
