@@ -929,20 +929,192 @@ function handleAddPlant(e) {
   renderDashboard();
 }
 
-// ---- Render: Plant Detail (stub, Phase 4) ----
+// ---- Render: Plant Detail ----
 function openPlantDetail(plantId) {
   const plant = getPlant(plantId);
   if (!plant) return;
   const variety = getVariety(plant.varietyId);
+  const vName = variety?.name || 'Unknown';
+  const milestone = getExpectedMilestone(plant);
+  const stageIdx = STAGES.indexOf(plant.stage);
+  const nextStage = stageIdx < STAGES.length - 1 ? STAGES[stageIdx + 1] : null;
+  const prevStage = stageIdx > 0 ? STAGES[stageIdx - 1] : null;
+
   const content = document.getElementById('detail-content');
   content.innerHTML = `
     <button class="btn-icon modal-close" onclick="closeModal('modal-detail')">✕</button>
-    <h2>${variety?.name || 'Unknown'}</h2>
-    <p class="text-dim">📍 ${escHtml(plant.location)}</p>
-    <p class="mt-1"><span class="stage-badge stage-${plant.stage}">${STAGE_LABELS[plant.stage]}</span></p>
-    <p class="text-sm text-dim mt-2">Full detail view coming in Phase 4…</p>
+    <h2>${escHtml(vName)}</h2>
+    <div class="flex-between mt-1">
+      <span class="stage-badge stage-${plant.stage}">${STAGE_LABELS[plant.stage]}</span>
+      <span class="text-sm text-dim">Planted ${daysSince(plant.plantedDate)} days ago</span>
+    </div>
+
+    <!-- Location -->
+    <div class="form-group mt-2">
+      <label>Location</label>
+      <input type="text" id="detail-location" value="${escHtml(plant.location)}">
+    </div>
+
+    <!-- Dates -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem" class="mt-1">
+      <div class="text-sm"><span class="text-dim">Planted:</span> ${plant.plantedDate}</div>
+      <div class="text-sm"><span class="text-dim">Sprouted:</span> ${plant.sproutedDate || '—'}</div>
+      <div class="text-sm"><span class="text-dim">Transplanted:</span> ${plant.transplantedDate || '—'}</div>
+      <div class="text-sm"><span class="text-dim">First harvest:</span> ${plant.firstHarvestDate || '—'}</div>
+    </div>
+
+    ${milestone ? `<div class="text-sm mt-1" style="color:var(--accent)">⏱ ${milestone.label}: ${milestone.days <= 0 ? 'Ready now!' : milestone.days + ' days'}</div>` : ''}
+
+    <!-- Stage transitions -->
+    <div class="flex gap-sm mt-2" style="flex-wrap:wrap">
+      ${prevStage ? `<button class="btn-secondary text-sm" id="detail-prev-stage">← Back to ${STAGE_LABELS[prevStage]}</button>` : ''}
+      ${nextStage ? `<button class="btn-primary text-sm" id="detail-next-stage">Advance to ${STAGE_LABELS[nextStage]} →</button>` : ''}
+    </div>
+
+    <!-- Watering -->
+    <h3 class="mt-3 mb-1">💧 Watering Log</h3>
+    <div class="flex gap-sm mb-1">
+      <button class="btn-primary text-sm" id="detail-water-now">💧 Water Now</button>
+      <span class="text-sm text-dim" style="align-self:center">Last: ${lastWateredText(plant)} ${needsWater(plant) ? '⚠️ Needs water!' : ''}</span>
+    </div>
+    <div style="max-height:150px;overflow-y:auto" class="text-sm">
+      ${plant.waterings.length === 0
+        ? '<p class="text-dim">No waterings recorded yet.</p>'
+        : plant.waterings.slice().reverse().map(w => {
+            const d = new Date(w.date);
+            return `<div class="text-dim" style="padding:0.15rem 0">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}${w.note ? ' — ' + escHtml(w.note) : ''}</div>`;
+          }).join('')
+      }
+    </div>
+
+    <!-- Notes -->
+    <h3 class="mt-3 mb-1">📝 Notes</h3>
+    <textarea id="detail-notes" rows="3" style="width:100%">${escHtml(plant.notes)}</textarea>
+
+    <!-- Photos -->
+    <h3 class="mt-3 mb-1">📷 Photos (${plant.photos.length})</h3>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem">
+      ${plant.photos.map((p, i) => `<div style="position:relative;width:80px;height:80px"><img src="${p}" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius-sm)"><button class="btn-icon" style="position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:20px;height:20px;font-size:0.7rem;padding:0" data-remove-photo="${i}">✕</button></div>`).join('')}
+    </div>
+    <input type="file" id="detail-photo-input" accept="image/*" class="text-sm">
+
+    <!-- Actions -->
+    <div class="flex-between mt-3" style="border-top:1px solid var(--border);padding-top:1rem">
+      <button class="btn-danger text-sm" id="detail-delete">🗑 Delete Plant</button>
+      <button class="btn-primary" id="detail-save">Save Changes</button>
+    </div>
   `;
+
+  // Wire detail events
+  content.querySelector('#detail-water-now')?.addEventListener('click', () => {
+    waterPlant(plant.id);
+    openPlantDetail(plant.id);
+  });
+
+  content.querySelector('#detail-next-stage')?.addEventListener('click', () => {
+    advanceStage(plant.id);
+    openPlantDetail(plant.id);
+  });
+
+  content.querySelector('#detail-prev-stage')?.addEventListener('click', () => {
+    revertStage(plant.id);
+    openPlantDetail(plant.id);
+  });
+
+  content.querySelector('#detail-save')?.addEventListener('click', () => {
+    updatePlant(plant.id, {
+      location: document.getElementById('detail-location').value.trim(),
+      notes: document.getElementById('detail-notes').value
+    });
+    closeModal('modal-detail');
+    renderDashboard();
+  });
+
+  content.querySelector('#detail-delete')?.addEventListener('click', () => {
+    if (confirm(`Delete "${vName}" at ${plant.location}? This cannot be undone.`)) {
+      deletePlant(plant.id);
+      closeModal('modal-detail');
+      renderDashboard();
+    }
+  });
+
+  content.querySelector('#detail-photo-input')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressImage(file, 500);
+      plant.photos.push(dataUrl);
+      saveState();
+      openPlantDetail(plant.id);
+    } catch (err) {
+      alert('Failed to process image: ' + err.message);
+    }
+  });
+
+  content.querySelectorAll('[data-remove-photo]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.removePhoto);
+      plant.photos.splice(idx, 1);
+      saveState();
+      openPlantDetail(plant.id);
+    });
+  });
+
   openModal('modal-detail');
+}
+
+// ---- Stage revert ----
+function revertStage(id) {
+  const plant = getPlant(id);
+  if (!plant) return;
+  const idx = STAGES.indexOf(plant.stage);
+  if (idx > 0) {
+    const oldStage = plant.stage;
+    plant.stage = STAGES[idx - 1];
+    // Clear date stamps for the stage we just left
+    if (oldStage === 'seedling') plant.sproutedDate = null;
+    if (oldStage === 'transplanted') plant.transplantedDate = null;
+    if (oldStage === 'harvesting') plant.firstHarvestDate = null;
+    saveState();
+  }
+}
+
+// ---- Image compression ----
+function compressImage(file, maxKB) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        const MAX_DIM = 1200;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.8;
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        // Reduce quality until under maxKB
+        while (dataUrl.length > maxKB * 1024 * 1.37 && quality > 0.1) {
+          quality -= 0.1;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 function renderTray() {}
