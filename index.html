@@ -6,7 +6,10 @@
 <title>Sprout — Plant Tracker</title>
 <meta name="description" content="Track your container garden from seed to harvest.">
 <meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
 <style>
 /* ============================================================
    RESET & BASE
@@ -394,6 +397,7 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
     <div class="flex-between mb-2">
       <h2>Seed Tray (80 cells)</h2>
     </div>
+    <p class="text-sm text-dim mb-2">Click any cell to assign a plant or view what's there. Rows A–H, columns 1–10.</p>
     <div id="tray-grid" class="tray-grid"></div>
     <div id="tray-legend" class="mt-2 text-sm text-dim"></div>
   </section>
@@ -401,6 +405,7 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
   <!-- ======== VARIETIES VIEW ======== -->
   <section id="view-varieties" class="view">
     <h2 class="mb-2">Variety Reference</h2>
+    <input type="text" id="variety-search" placeholder="Search varieties…" class="mb-2" style="width:100%;max-width:400px">
     <div id="variety-list" class="variety-list"></div>
   </section>
 
@@ -1255,7 +1260,15 @@ function openTrayCellModal(cellLabel) {
 // ---- Render: Varieties Reference ----
 function renderVarieties() {
   const list = document.getElementById('variety-list');
-  list.innerHTML = state.varieties.map(v => {
+  const search = (document.getElementById('variety-search')?.value || '').toLowerCase().trim();
+  const filtered = state.varieties.filter(v => !search || v.name.toLowerCase().includes(search) || v.category.includes(search));
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="emoji">📚</div><p>No varieties match your search.</p></div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(v => {
     const preGerm = v.preGermMethod ? v.preGermMethod.replace(/_/g, ' ') : 'None';
     const trayToPot = v.trayToPotWeeks ? `${v.trayToPotWeeks[0]}–${v.trayToPotWeeks[1]} weeks` : 'N/A (direct sow)';
     return `<div class="card" style="cursor:default">
@@ -1363,6 +1376,9 @@ function initEvents() {
     e.target.value = '';
   });
 
+  // Variety search
+  document.getElementById('variety-search')?.addEventListener('input', renderVarieties);
+
   // Close modals on backdrop click
   document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
     backdrop.addEventListener('click', (e) => {
@@ -1383,6 +1399,11 @@ function init() {
   loadState();
   initEvents();
   switchView('dashboard');
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
