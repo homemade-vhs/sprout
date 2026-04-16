@@ -1252,8 +1252,61 @@ function openTrayCellModal(cellLabel) {
 
   openModal('modal-tray-cell');
 }
-function renderVarieties() {}
-function renderSettings() {}
+// ---- Render: Varieties Reference ----
+function renderVarieties() {
+  const list = document.getElementById('variety-list');
+  list.innerHTML = state.varieties.map(v => {
+    const preGerm = v.preGermMethod ? v.preGermMethod.replace(/_/g, ' ') : 'None';
+    const trayToPot = v.trayToPotWeeks ? `${v.trayToPotWeeks[0]}–${v.trayToPotWeeks[1]} weeks` : 'N/A (direct sow)';
+    return `<div class="card" style="cursor:default">
+      <div class="flex-between">
+        <strong>${CATEGORIES[v.category]?.charAt(0) || ''} ${escHtml(v.name)}</strong>
+        <span class="text-xs text-dim">${v.season === 'warm' ? '☀️ Warm season' : v.season === 'cool' ? '❄️ Cool season' : '🌤 Either'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem 1rem;margin-top:0.5rem" class="text-sm">
+        <div><span class="text-dim">Start:</span> ${v.startMethod === 'tray' ? '🌱 Tray' : '🌿 Direct sow'}</div>
+        <div><span class="text-dim">Depth:</span> ${v.plantDepth}</div>
+        <div><span class="text-dim">Germination:</span> ${v.germinationDays[0]}–${v.germinationDays[1]} days</div>
+        <div><span class="text-dim">Pre-germ:</span> ${preGerm}</div>
+        <div><span class="text-dim">Tray to pot:</span> ${trayToPot}</div>
+        <div><span class="text-dim">Pot size:</span> ${v.potSizeGallons} gal</div>
+        <div><span class="text-dim">Days to harvest:</span> ${v.daysToHarvest[0]}–${v.daysToHarvest[1]}</div>
+        <div><span class="text-dim">Harvest from:</span> ${v.harvestFrom}</div>
+        <div><span class="text-dim">Water every:</span> ${v.waterFrequencyDays} day${v.waterFrequencyDays !== 1 ? 's' : ''}</div>
+        <div><span class="text-dim">Sun:</span> ${v.sunHours}+ hours</div>
+      </div>
+      ${v.tips.length > 0 ? `<div class="mt-1 text-sm" style="color:var(--accent)">💡 ${v.tips.map(t => escHtml(t)).join(' • ')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ---- Render: Settings ----
+function renderSettings() {
+  // Settings view is mostly static HTML; just ensure counts are shown
+  const plantCount = state.plants.length;
+  const varietyCount = state.varieties.length;
+  const storageSize = new Blob([JSON.stringify(state)]).size;
+  const sizeStr = storageSize > 1024 * 1024
+    ? (storageSize / 1024 / 1024).toFixed(1) + ' MB'
+    : (storageSize / 1024).toFixed(1) + ' KB';
+
+  // Add stats below the about section if not already present
+  let statsEl = document.getElementById('settings-stats');
+  if (!statsEl) {
+    statsEl = document.createElement('div');
+    statsEl.id = 'settings-stats';
+    statsEl.className = 'settings-section';
+    document.getElementById('view-settings').appendChild(statsEl);
+  }
+  statsEl.innerHTML = `
+    <h3>Stats</h3>
+    <div class="text-sm text-dim">
+      <p>🌱 ${plantCount} plant${plantCount !== 1 ? 's' : ''} tracked</p>
+      <p>📚 ${varietyCount} varieties in database</p>
+      <p>💾 ${sizeStr} used in localStorage</p>
+    </div>
+  `;
+}
 
 // ---- Utility ----
 function escHtml(str) {
