@@ -217,10 +217,9 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
    ============================================================ */
 .tray-grid {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 4px;
-  max-width: 600px;
-  margin: 1rem auto;
+  max-width: 420px;
 }
 .tray-cell {
   aspect-ratio: 1;
@@ -327,7 +326,7 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
   header { flex-direction: column; gap: 0.75rem; }
   nav { width: 100%; justify-content: center; }
   .card-grid { grid-template-columns: 1fr; }
-  .tray-grid { grid-template-columns: repeat(10, 1fr); gap: 2px; }
+  .tray-grid { grid-template-columns: repeat(8, 1fr); gap: 2px; }
   .tray-cell { font-size: 0.55rem; }
   .modal { padding: 1rem; }
 }
@@ -364,7 +363,6 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
     <h1><span class="logo">🌱</span> Sprout</h1>
     <nav id="main-nav">
       <button data-view="dashboard" class="active">Dashboard</button>
-      <button data-view="tray">Tray</button>
       <button data-view="varieties">Varieties</button>
       <button data-view="settings">Settings</button>
     </nav>
@@ -390,16 +388,23 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
       <p>No plants yet — let's get growing!</p>
       <button class="btn-primary" id="btn-add-plant-empty">+ Add Your First Plant</button>
     </div>
-  </section>
 
-  <!-- ======== TRAY VIEW ======== -->
-  <section id="view-tray" class="view">
-    <div class="flex-between mb-2">
-      <h2>Seed Tray (80 cells)</h2>
+    <!-- Seed Trays (inline on dashboard) -->
+    <div id="tray-section" class="mt-3">
+      <h3 class="mb-1">Seed Trays</h3>
+      <p class="text-sm text-dim mb-2">Click any cell to assign a plant or view what's there.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:1.5rem;justify-content:center">
+        <div>
+          <h4 class="text-sm text-dim mb-1" style="text-align:center">Tray 1 — Rows A–E, Cols 1–8</h4>
+          <div id="tray-grid-1" class="tray-grid"></div>
+        </div>
+        <div>
+          <h4 class="text-sm text-dim mb-1" style="text-align:center">Tray 2 — Rows A–E, Cols 1–8</h4>
+          <div id="tray-grid-2" class="tray-grid"></div>
+        </div>
+      </div>
+      <div id="tray-legend" class="mt-2 text-sm text-dim"></div>
     </div>
-    <p class="text-sm text-dim mb-2">Click any cell to assign a plant or view what's there. Rows A–H, columns 1–10.</p>
-    <div id="tray-grid" class="tray-grid"></div>
-    <div id="tray-legend" class="mt-2 text-sm text-dim"></div>
   </section>
 
   <!-- ======== VARIETIES VIEW ======== -->
@@ -816,7 +821,7 @@ function switchView(viewName) {
   if (navBtn) navBtn.classList.add('active');
   // Render view
   if (viewName === 'dashboard') renderDashboard();
-  else if (viewName === 'tray') renderTray();
+
   else if (viewName === 'varieties') renderVarieties();
   else if (viewName === 'settings') renderSettings();
 }
@@ -840,17 +845,13 @@ function renderDashboard() {
   if (state.plants.length === 0) {
     grid.innerHTML = '';
     empty.classList.remove('hidden');
-    return;
-  }
+  } else {
+    empty.classList.add('hidden');
 
-  empty.classList.add('hidden');
-
-  if (filtered.length === 0) {
-    grid.innerHTML = '<p class="text-dim" style="grid-column:1/-1;text-align:center;padding:2rem">No plants match the current filters.</p>';
-    return;
-  }
-
-  grid.innerHTML = filtered.map(plant => {
+    if (filtered.length === 0) {
+      grid.innerHTML = '<p class="text-dim" style="grid-column:1/-1;text-align:center;padding:2rem">No plants match the current filters.</p>';
+    } else {
+      grid.innerHTML = filtered.map(plant => {
     const variety = getVariety(plant.varietyId);
     const vName = variety?.name || 'Unknown';
     const catEmoji = variety ? (CATEGORIES[variety.category]?.charAt(0) || '') : '';
@@ -875,6 +876,11 @@ function renderDashboard() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', () => openPlantDetail(card.dataset.plantId));
   });
+    }
+  }
+
+  // Always render trays on the dashboard
+  renderTray();
 }
 
 function getFilteredPlants() {
@@ -1122,41 +1128,50 @@ function compressImage(file, maxKB) {
   });
 }
 
-// ---- Render: Tray View ----
+// ---- Render: Tray View (inline on dashboard) ----
 function renderTray() {
-  const grid = document.getElementById('tray-grid');
+  const grid1 = document.getElementById('tray-grid-1');
+  const grid2 = document.getElementById('tray-grid-2');
   const legend = document.getElementById('tray-legend');
+  if (!grid1 || !grid2) return;
 
-  // Build a map: tray cell label -> plant
+  // Build a map: "T1-A1" or "T2-B3" -> plant
   const trayPlants = {};
   state.plants.forEach(p => {
-    const loc = p.location.toLowerCase();
-    // Match "tray cell X" patterns
-    const m = loc.match(/tray\s*cell\s*(.+)/i);
+    const m = p.location.match(/tray\s*(\d)\s*cell\s*(.+)/i);
     if (m) {
-      trayPlants[m[1].trim().toUpperCase()] = p;
+      const key = `T${m[1]}-${m[2].trim().toUpperCase()}`;
+      trayPlants[key] = p;
     }
   });
 
-  const rows = 'ABCDEFGH';
-  let html = '';
-  for (let r = 0; r < 8; r++) {
-    for (let c = 1; c <= 10; c++) {
-      const cellLabel = `${rows[r]}${c}`;
-      const plant = trayPlants[cellLabel];
-      if (plant) {
-        const variety = getVariety(plant.varietyId);
-        const catColor = getCategoryColor(variety?.category);
-        const stageColor = getStageColor(plant.stage);
-        html += `<div class="tray-cell occupied" style="border-color:${stageColor};background:${catColor}22" data-tray-cell="${cellLabel}" title="${variety?.name || 'Unknown'} — ${STAGE_LABELS[plant.stage]}">
-          <span>${variety?.name?.split(' ').pop() || '?'}<br><span style="font-size:0.6rem">${cellLabel}</span></span>
-        </div>`;
-      } else {
-        html += `<div class="tray-cell" data-tray-cell="${cellLabel}"><span class="text-muted">${cellLabel}</span></div>`;
+  const rows = 'ABCDE';
+  const cols = 8;
+
+  function buildTrayHtml(trayNum) {
+    let html = '';
+    for (let r = 0; r < rows.length; r++) {
+      for (let c = 1; c <= cols; c++) {
+        const cellLabel = `${rows[r]}${c}`;
+        const key = `T${trayNum}-${cellLabel}`;
+        const plant = trayPlants[key];
+        if (plant) {
+          const variety = getVariety(plant.varietyId);
+          const catColor = getCategoryColor(variety?.category);
+          const stageColor = getStageColor(plant.stage);
+          html += `<div class="tray-cell occupied" style="border-color:${stageColor};background:${catColor}22" data-tray-cell="${cellLabel}" data-tray-num="${trayNum}" title="${variety?.name || 'Unknown'} — ${STAGE_LABELS[plant.stage]}">
+            <span>${variety?.name?.split(' ').pop() || '?'}<br><span style="font-size:0.6rem">${cellLabel}</span></span>
+          </div>`;
+        } else {
+          html += `<div class="tray-cell" data-tray-cell="${cellLabel}" data-tray-num="${trayNum}"><span class="text-muted">${cellLabel}</span></div>`;
+        }
       }
     }
+    return html;
   }
-  grid.innerHTML = html;
+
+  grid1.innerHTML = buildTrayHtml(1);
+  grid2.innerHTML = buildTrayHtml(2);
 
   // Legend
   legend.innerHTML = `
@@ -1166,9 +1181,12 @@ function renderTray() {
     </div>
   `;
 
-  // Click handlers
-  grid.querySelectorAll('.tray-cell').forEach(cell => {
-    cell.addEventListener('click', () => openTrayCellModal(cell.dataset.trayCell));
+  // Click handlers via event delegation
+  [grid1, grid2].forEach(grid => {
+    grid.onclick = (e) => {
+      const cell = e.target.closest('.tray-cell');
+      if (cell) openTrayCellModal(cell.dataset.trayCell, parseInt(cell.dataset.trayNum));
+    };
   });
 }
 
@@ -1182,19 +1200,20 @@ function getCategoryColor(cat) {
   return colors[cat] || '#666';
 }
 
-function openTrayCellModal(cellLabel) {
+function openTrayCellModal(cellLabel, trayNum = 1) {
   const content = document.getElementById('tray-cell-content');
+  const fullLabel = `Tray ${trayNum} cell ${cellLabel}`;
   // Find plant at this cell
   const plant = state.plants.find(p => {
-    const m = p.location.match(/tray\s*cell\s*(.+)/i);
-    return m && m[1].trim().toUpperCase() === cellLabel;
+    const m = p.location.match(/tray\s*(\d)\s*cell\s*(.+)/i);
+    return m && parseInt(m[1]) === trayNum && m[2].trim().toUpperCase() === cellLabel;
   });
 
   if (plant) {
     const variety = getVariety(plant.varietyId);
     content.innerHTML = `
       <button class="btn-icon modal-close" onclick="closeModal('modal-tray-cell')">✕</button>
-      <h2>Cell ${cellLabel}</h2>
+      <h2>Tray ${trayNum} — Cell ${cellLabel}</h2>
       <p class="mt-1"><strong>${variety?.name || 'Unknown'}</strong></p>
       <p><span class="stage-badge stage-${plant.stage}">${STAGE_LABELS[plant.stage]}</span></p>
       <p class="text-sm text-dim mt-1">Planted ${daysSince(plant.plantedDate)} days ago • 💧 ${lastWateredText(plant)}</p>
@@ -1211,13 +1230,13 @@ function openTrayCellModal(cellLabel) {
     content.querySelector('#tray-cell-water')?.addEventListener('click', () => {
       waterPlant(plant.id);
       closeModal('modal-tray-cell');
-      renderTray();
+      renderDashboard();
     });
     content.querySelector('#tray-cell-remove')?.addEventListener('click', () => {
       if (confirm('Remove this plant from the tray? (The plant record will remain, but its location will be cleared.)')) {
         updatePlant(plant.id, { location: 'Unassigned' });
         closeModal('modal-tray-cell');
-        renderTray();
+        renderDashboard();
       }
     });
   } else {
@@ -1228,7 +1247,7 @@ function openTrayCellModal(cellLabel) {
     });
     content.innerHTML = `
       <button class="btn-icon modal-close" onclick="closeModal('modal-tray-cell')">✕</button>
-      <h2>Cell ${cellLabel}</h2>
+      <h2>Tray ${trayNum} — Cell ${cellLabel}</h2>
       <p class="text-dim mt-1">This cell is empty.</p>
       ${unassigned.length > 0 ? `
         <div class="form-group mt-2">
@@ -1240,7 +1259,7 @@ function openTrayCellModal(cellLabel) {
             }).join('')}
           </select>
         </div>
-        <button class="btn-primary mt-1" id="tray-cell-assign">Assign to ${cellLabel}</button>
+        <button class="btn-primary mt-1" id="tray-cell-assign">Assign to Tray ${trayNum} ${cellLabel}</button>
       ` : `
         <p class="text-sm text-dim mt-2">No unassigned germinating plants to place here.<br>Add a plant first from the Dashboard.</p>
       `}
@@ -1248,9 +1267,9 @@ function openTrayCellModal(cellLabel) {
     content.querySelector('#tray-cell-assign')?.addEventListener('click', () => {
       const plantId = document.getElementById('tray-cell-assign-select').value;
       if (plantId) {
-        updatePlant(plantId, { location: `Tray cell ${cellLabel}` });
+        updatePlant(plantId, { location: `Tray ${trayNum} cell ${cellLabel}` });
         closeModal('modal-tray-cell');
-        renderTray();
+        renderDashboard();
       }
     });
   }
