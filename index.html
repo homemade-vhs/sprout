@@ -1262,7 +1262,7 @@ function openTrayCellModal(cellLabel, trayNum = 1) {
       }
     });
   } else {
-    // Empty cell — offer to assign a plant
+    // Empty cell — offer to plant a new variety or assign existing
     const unassigned = state.plants.filter(p => {
       const loc = p.location.toLowerCase();
       return p.stage === 'germinating' && !loc.startsWith('tray cell');
@@ -1271,21 +1271,39 @@ function openTrayCellModal(cellLabel, trayNum = 1) {
       <button class="btn-icon modal-close" onclick="closeModal('modal-tray-cell')">✕</button>
       <h2>Tray ${trayNum} — Cell ${cellLabel}</h2>
       <p class="text-dim mt-1">This cell is empty.</p>
+
+      <div class="form-group mt-2">
+        <label>Plant a new seed:</label>
+        <select id="tray-cell-variety-select">
+          ${state.varieties.map(v => `<option value="${v.id}">${varietyFullName(v)}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn-primary mt-1" id="tray-cell-plant" style="width:100%">🌱 Plant in ${cellLabel}</button>
+
       ${unassigned.length > 0 ? `
-        <div class="form-group mt-2">
-          <label>Assign a plant:</label>
-          <select id="tray-cell-assign-select">
-            ${unassigned.map(p => {
-              const v = getVariety(p.varietyId);
-              return `<option value="${p.id}">${varietyFullName(v)} (${escHtml(p.location)})</option>`;
-            }).join('')}
-          </select>
+        <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:1rem">
+          <div class="form-group">
+            <label>Or assign an existing plant:</label>
+            <select id="tray-cell-assign-select">
+              ${unassigned.map(p => {
+                const v = getVariety(p.varietyId);
+                return `<option value="${p.id}">${varietyFullName(v)} (${escHtml(p.location)})</option>`;
+              }).join('')}
+            </select>
+          </div>
+          <button class="btn-secondary mt-1" id="tray-cell-assign" style="width:100%">Move to ${cellLabel}</button>
         </div>
-        <button class="btn-primary mt-1" id="tray-cell-assign">Assign to Tray ${trayNum} ${cellLabel}</button>
-      ` : `
-        <p class="text-sm text-dim mt-2">No unassigned germinating plants to place here.<br>Add a plant first from the Dashboard.</p>
-      `}
+      ` : ''}
     `;
+    content.querySelector('#tray-cell-plant')?.addEventListener('click', () => {
+      const varietyId = document.getElementById('tray-cell-variety-select').value;
+      if (varietyId) {
+        const plant = createPlant(varietyId, `Tray ${trayNum} cell ${cellLabel}`, new Date().toISOString().slice(0, 10));
+        addPlant(plant);
+        closeModal('modal-tray-cell');
+        renderDashboard();
+      }
+    });
     content.querySelector('#tray-cell-assign')?.addEventListener('click', () => {
       const plantId = document.getElementById('tray-cell-assign-select').value;
       if (plantId) {
