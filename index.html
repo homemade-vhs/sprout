@@ -1009,8 +1009,11 @@ function openPlantDetail(plantId) {
     </div>
 
     <!-- Dates -->
+    <div class="form-group mt-1">
+      <label>Planted Date</label>
+      <input type="date" id="detail-planted-date" value="${plant.plantedDate}">
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem" class="mt-1">
-      <div class="text-sm"><span class="text-dim">Planted:</span> ${plant.plantedDate}</div>
       <div class="text-sm"><span class="text-dim">Sprouted:</span> ${plant.sproutedDate || '—'}</div>
       <div class="text-sm"><span class="text-dim">Transplanted:</span> ${plant.transplantedDate || '—'}</div>
       <div class="text-sm"><span class="text-dim">First harvest:</span> ${plant.firstHarvestDate || '—'}</div>
@@ -1077,6 +1080,7 @@ function openPlantDetail(plantId) {
   content.querySelector('#detail-save')?.addEventListener('click', () => {
     updatePlant(plant.id, {
       location: document.getElementById('detail-location').value.trim(),
+      plantedDate: document.getElementById('detail-planted-date').value,
       notes: document.getElementById('detail-notes').value
     });
     closeModal('modal-detail');
@@ -1299,6 +1303,10 @@ function openTrayCellModal(cellLabel, trayNum = 1) {
           ${state.varieties.map(v => `<option value="${v.id}">${varietyFullName(v)}</option>`).join('')}
         </select>
       </div>
+      <div class="form-group">
+        <label>Planted Date</label>
+        <input type="date" id="tray-cell-date" value="${new Date().toISOString().slice(0, 10)}">
+      </div>
       <button class="btn-primary mt-1" id="tray-cell-plant" style="width:100%">🌱 Plant in ${cellLabel}</button>
 
       ${unassigned.length > 0 ? `
@@ -1318,8 +1326,9 @@ function openTrayCellModal(cellLabel, trayNum = 1) {
     `;
     content.querySelector('#tray-cell-plant')?.addEventListener('click', () => {
       const varietyId = document.getElementById('tray-cell-variety-select').value;
+      const plantDate = document.getElementById('tray-cell-date').value;
       if (varietyId) {
-        const plant = createPlant(varietyId, `Tray ${trayNum} cell ${cellLabel}`, new Date().toISOString().slice(0, 10));
+        const plant = createPlant(varietyId, `Tray ${trayNum} cell ${cellLabel}`, plantDate);
         addPlant(plant);
         closeModal('modal-tray-cell');
         renderDashboard();
