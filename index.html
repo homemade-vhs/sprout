@@ -239,10 +239,23 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
   min-height: 56px;
 }
 .tray-cell:hover { border-color: var(--accent); background: #252525; }
-.tray-cell.occupied { border-style: solid; color: var(--text); background: var(--surface); }
+.tray-cell.occupied { border-style: solid; color: var(--text); background: var(--surface); position: relative; flex-direction: column; }
 .tray-cell-icon { width: 70%; height: 70%; object-fit: contain; }
 .tray-cell-label { font-size: 0.55rem; color: var(--text-dim); position: absolute; bottom: 2px; right: 3px; line-height: 1; }
-.tray-cell.occupied { position: relative; flex-direction: column; }
+
+/* Tray tabs (mobile toggle) */
+.tray-tabs { display: none; gap: 0.25rem; }
+.tray-tab {
+  background: var(--surface);
+  color: var(--text-dim);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+}
+.tray-tab:hover { color: var(--text); background: var(--surface-hover); }
+.tray-tab.active { color: var(--accent); background: var(--accent-bg); border-color: var(--accent); }
+.tray-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 
 /* ============================================================
    VARIETY TABLE
@@ -334,8 +347,13 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
   .card-grid { grid-template-columns: 1fr; }
   .tray-grid { grid-template-columns: repeat(8, 1fr); gap: 3px; }
   .tray-cell { font-size: 0.65rem; min-height: 40px; }
-  #tray-section > div:nth-child(2) { grid-template-columns: 1fr !important; }
   .modal { padding: 1rem; }
+  .tray-tabs { display: flex; }
+  .tray-hint { display: none; }
+  .tray-panels { display: block; }
+  .tray-panel { display: none; }
+  .tray-panel.active { display: block; }
+  .tray-panel-label { display: none; }
 }
 
 /* ============================================================
@@ -389,15 +407,19 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
     <div id="tray-section" class="mb-3">
       <div class="flex-between mb-1">
         <h3>Seed Trays</h3>
-        <span class="text-sm text-dim">Click any cell to assign or view</span>
+        <div class="tray-tabs">
+          <button class="tray-tab active" data-tray="1">Tray 1</button>
+          <button class="tray-tab" data-tray="2">Tray 2</button>
+        </div>
+        <span class="text-sm text-dim tray-hint">Click any cell to assign or view</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
-        <div>
-          <h4 class="text-xs text-dim mb-1">Tray 1</h4>
+      <div class="tray-panels">
+        <div class="tray-panel active" data-tray-panel="1">
+          <h4 class="text-xs text-dim mb-1 tray-panel-label">Tray 1</h4>
           <div id="tray-grid-1" class="tray-grid"></div>
         </div>
-        <div>
-          <h4 class="text-xs text-dim mb-1">Tray 2</h4>
+        <div class="tray-panel active" data-tray-panel="2">
+          <h4 class="text-xs text-dim mb-1 tray-panel-label">Tray 2</h4>
           <div id="tray-grid-2" class="tray-grid"></div>
         </div>
       </div>
@@ -1406,6 +1428,16 @@ function initEvents() {
 
   // Add plant form submit
   document.getElementById('form-add-plant')?.addEventListener('submit', handleAddPlant);
+
+  // Tray tab switcher (mobile)
+  document.querySelectorAll('.tray-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tray-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tray-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelector(`.tray-panel[data-tray-panel="${tab.dataset.tray}"]`)?.classList.add('active');
+    });
+  });
 
   // Filters
   document.getElementById('filter-stage')?.addEventListener('change', renderDashboard);
