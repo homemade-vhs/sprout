@@ -218,25 +218,28 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
 .tray-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  gap: 4px;
-  max-width: 420px;
+  gap: 6px;
+  width: 100%;
 }
 .tray-cell {
   aspect-ratio: 1;
-  border: 2px dashed var(--border);
+  border: 2px dashed #333;
   border-radius: var(--radius-sm);
+  background: #1e1e1e;
+  color: #555;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: background var(--transition), border-color var(--transition);
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
   text-align: center;
   overflow: hidden;
-  padding: 2px;
+  padding: 4px;
+  min-height: 56px;
 }
-.tray-cell:hover { border-color: var(--accent); }
-.tray-cell.occupied { border-style: solid; }
+.tray-cell:hover { border-color: var(--accent); background: #252525; }
+.tray-cell.occupied { border-style: solid; color: var(--text); background: var(--surface); }
 
 /* ============================================================
    VARIETY TABLE
@@ -326,8 +329,9 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
   header { flex-direction: column; gap: 0.75rem; }
   nav { width: 100%; justify-content: center; }
   .card-grid { grid-template-columns: 1fr; }
-  .tray-grid { grid-template-columns: repeat(8, 1fr); gap: 2px; }
-  .tray-cell { font-size: 0.55rem; }
+  .tray-grid { grid-template-columns: repeat(8, 1fr); gap: 3px; }
+  .tray-cell { font-size: 0.65rem; min-height: 40px; }
+  #tray-section > div:nth-child(2) { grid-template-columns: 1fr !important; }
   .modal { padding: 1rem; }
 }
 
@@ -377,6 +381,26 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
         <button class="btn-primary" id="btn-add-plant">+ Add Plant</button>
       </div>
     </div>
+
+    <!-- Seed Trays (top of dashboard) -->
+    <div id="tray-section" class="mb-3">
+      <div class="flex-between mb-1">
+        <h3>Seed Trays</h3>
+        <span class="text-sm text-dim">Click any cell to assign or view</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div>
+          <h4 class="text-xs text-dim mb-1">Tray 1</h4>
+          <div id="tray-grid-1" class="tray-grid"></div>
+        </div>
+        <div>
+          <h4 class="text-xs text-dim mb-1">Tray 2</h4>
+          <div id="tray-grid-2" class="tray-grid"></div>
+        </div>
+      </div>
+      <div id="tray-legend" class="mt-2 text-sm text-dim"></div>
+    </div>
+
     <div class="filter-bar" id="filter-bar">
       <select id="filter-stage"><option value="">All Stages</option></select>
       <select id="filter-category"><option value="">All Categories</option></select>
@@ -387,23 +411,6 @@ nav button.active { color: var(--accent); background: var(--accent-bg); }
       <div class="emoji">🌱</div>
       <p>No plants yet — let's get growing!</p>
       <button class="btn-primary" id="btn-add-plant-empty">+ Add Your First Plant</button>
-    </div>
-
-    <!-- Seed Trays (inline on dashboard) -->
-    <div id="tray-section" class="mt-3">
-      <h3 class="mb-1">Seed Trays</h3>
-      <p class="text-sm text-dim mb-2">Click any cell to assign a plant or view what's there.</p>
-      <div style="display:flex;flex-wrap:wrap;gap:1.5rem;justify-content:center">
-        <div>
-          <h4 class="text-sm text-dim mb-1" style="text-align:center">Tray 1 — Rows A–E, Cols 1–8</h4>
-          <div id="tray-grid-1" class="tray-grid"></div>
-        </div>
-        <div>
-          <h4 class="text-sm text-dim mb-1" style="text-align:center">Tray 2 — Rows A–E, Cols 1–8</h4>
-          <div id="tray-grid-2" class="tray-grid"></div>
-        </div>
-      </div>
-      <div id="tray-legend" class="mt-2 text-sm text-dim"></div>
     </div>
   </section>
 
