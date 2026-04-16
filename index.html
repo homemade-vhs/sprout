@@ -489,8 +489,128 @@ const CATEGORIES = {
 };
 
 // ---- Variety Database ----
-// (Phase 2: will be populated here)
-const DEFAULT_VARIETIES = [];
+const DEFAULT_VARIETIES = [
+  {
+    id: 'tomato-large-red-cherry', name: 'Tomato Large Red Cherry', category: 'fruiting_veg',
+    startMethod: 'tray', germinationDays: [5, 10], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: [4, 6], potSizeGallons: 5,
+    daysToHarvest: [65, 80], harvestFrom: 'transplant', waterFrequencyDays: 2,
+    sunHours: 8, season: 'warm',
+    tips: ['Pinch suckers for bushier growth', 'Stake or cage when transplanting', 'Pick when fully red']
+  },
+  {
+    id: 'tomato-yellow-pear', name: 'Tomato Yellow Pear', category: 'fruiting_veg',
+    startMethod: 'tray', germinationDays: [5, 10], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: [4, 6], potSizeGallons: 5,
+    daysToHarvest: [70, 80], harvestFrom: 'transplant', waterFrequencyDays: 2,
+    sunHours: 8, season: 'warm',
+    tips: ['Very prolific producer', 'Great for snacking and salads', 'Indeterminate — needs support']
+  },
+  {
+    id: 'pepper-anaheim', name: 'Pepper Anaheim', category: 'fruiting_veg',
+    startMethod: 'tray', germinationDays: [7, 14], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: [6, 8], potSizeGallons: 5,
+    daysToHarvest: [75, 80], harvestFrom: 'transplant', waterFrequencyDays: 2,
+    sunHours: 8, season: 'warm',
+    tips: ['Mild heat, great for roasting', 'Pick green or wait for red', 'Needs warm soil to germinate']
+  },
+  {
+    id: 'pepper-cayenne', name: 'Pepper Cayenne', category: 'fruiting_veg',
+    startMethod: 'tray', germinationDays: [8, 14], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: [6, 8], potSizeGallons: 3,
+    daysToHarvest: [70, 85], harvestFrom: 'transplant', waterFrequencyDays: 2,
+    sunHours: 8, season: 'warm',
+    tips: ['Hot pepper — use gloves when handling', 'Dry or freeze extras', 'Very productive in containers']
+  },
+  {
+    id: 'pepper-california-wonder', name: 'Pepper California Wonder', category: 'fruiting_veg',
+    startMethod: 'tray', germinationDays: [7, 14], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: [6, 8], potSizeGallons: 5,
+    daysToHarvest: [75, 90], harvestFrom: 'transplant', waterFrequencyDays: 2,
+    sunHours: 8, season: 'warm',
+    tips: ['Classic bell pepper', 'Green turns red if left on plant', 'Heavy feeder — fertilize regularly']
+  },
+  {
+    id: 'cucumber-boston-pickling', name: 'Cucumber Boston Pickling', category: 'fruiting_veg',
+    startMethod: 'direct_sow', germinationDays: [4, 8], preGermMethod: 'soak_8h',
+    plantDepth: '½ inch', trayToPotWeeks: null, potSizeGallons: 7,
+    daysToHarvest: [55, 65], harvestFrom: 'sprout', waterFrequencyDays: 1,
+    sunHours: 6, season: 'warm',
+    tips: ['Provide a trellis for climbing', 'Pick small for pickling', 'Water consistently — they get bitter if stressed']
+  },
+  {
+    id: 'watermelon-crimson-sweet', name: 'Watermelon Crimson Sweet', category: 'fruiting_veg',
+    startMethod: 'direct_sow', germinationDays: [6, 10], preGermMethod: 'soak_8h',
+    plantDepth: '1 inch', trayToPotWeeks: null, potSizeGallons: 15,
+    daysToHarvest: [80, 90], harvestFrom: 'sprout', waterFrequencyDays: 2,
+    sunHours: 8, season: 'warm',
+    tips: ['Needs lots of space — let vines trail', 'Thump test: hollow sound = ripe', 'Reduce watering near harvest for sweeter fruit']
+  },
+  {
+    id: 'okra-clemson-spineless', name: 'Okra Clemson Spineless', category: 'fruiting_veg',
+    startMethod: 'direct_sow', germinationDays: [5, 14], preGermMethod: 'soak_8h',
+    plantDepth: '¾ inch', trayToPotWeeks: null, potSizeGallons: 5,
+    daysToHarvest: [55, 65], harvestFrom: 'sprout', waterFrequencyDays: 2,
+    sunHours: 8, season: 'warm',
+    tips: ['Loves heat — perfect for LA', 'Pick pods at 3 inches for tenderness', 'Soaking seeds speeds germination significantly']
+  },
+  {
+    id: 'cabbage-golden-acre', name: 'Cabbage Golden Acre', category: 'leafy_green',
+    startMethod: 'tray', germinationDays: [4, 10], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: [4, 6], potSizeGallons: 5,
+    daysToHarvest: [60, 70], harvestFrom: 'transplant', waterFrequencyDays: 2,
+    sunHours: 6, season: 'cool',
+    tips: ['Compact heads, good for containers', 'Watch for cabbage worms', 'Harvest when head feels firm']
+  },
+  {
+    id: 'basil-italian-large-leaf', name: 'Basil Italian Large Leaf', category: 'herb',
+    startMethod: 'tray', germinationDays: [5, 10], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: [3, 4], potSizeGallons: 2,
+    daysToHarvest: [60, 75], harvestFrom: 'sprout', waterFrequencyDays: 1,
+    sunHours: 6, season: 'warm',
+    tips: ['Pinch flower buds to prolong harvest', 'Harvest from the top down', 'Companion plant with tomatoes']
+  },
+  {
+    id: 'carrot-scarlet-nantes', name: 'Carrot Scarlet Nantes', category: 'root',
+    startMethod: 'direct_sow', germinationDays: [10, 21], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: null, potSizeGallons: 5,
+    daysToHarvest: [65, 75], harvestFrom: 'sprout', waterFrequencyDays: 2,
+    sunHours: 6, season: 'cool',
+    tips: ['Needs deep loose soil — at least 12 inches', 'Thin seedlings to 2 inches apart', 'Tops poking out of soil means ready to check']
+  },
+  {
+    id: 'radish-french-breakfast', name: 'Radish French Breakfast', category: 'root',
+    startMethod: 'direct_sow', germinationDays: [3, 7], preGermMethod: null,
+    plantDepth: '½ inch', trayToPotWeeks: null, potSizeGallons: 2,
+    daysToHarvest: [25, 30], harvestFrom: 'sprout', waterFrequencyDays: 1,
+    sunHours: 6, season: 'cool',
+    tips: ['Fastest veggie to harvest!', 'Sow every 2 weeks for continuous harvest', 'Gets pithy if left too long']
+  },
+  {
+    id: 'lettuce-romaine', name: 'Lettuce Romaine', category: 'leafy_green',
+    startMethod: 'direct_sow', germinationDays: [4, 10], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: null, potSizeGallons: 3,
+    daysToHarvest: [60, 75], harvestFrom: 'sprout', waterFrequencyDays: 1,
+    sunHours: 4, season: 'cool',
+    tips: ['Cut-and-come-again: harvest outer leaves', 'Bolts in heat — provide afternoon shade in LA', 'Light surface sowing — seeds need light']
+  },
+  {
+    id: 'beet-chioggia', name: 'Beet Chioggia', category: 'root',
+    startMethod: 'direct_sow', germinationDays: [5, 10], preGermMethod: 'soak_4h',
+    plantDepth: '½ inch', trayToPotWeeks: null, potSizeGallons: 5,
+    daysToHarvest: [55, 65], harvestFrom: 'sprout', waterFrequencyDays: 2,
+    sunHours: 6, season: 'cool',
+    tips: ['Beautiful candy-stripe interior', 'Greens are edible too!', 'Thin to 3 inches apart', 'Soaking speeds up germination']
+  },
+  {
+    id: 'dill-mammoth-long-island', name: 'Dill Mammoth Long Island', category: 'herb',
+    startMethod: 'direct_sow', germinationDays: [7, 14], preGermMethod: null,
+    plantDepth: '¼ inch', trayToPotWeeks: null, potSizeGallons: 3,
+    daysToHarvest: [40, 60], harvestFrom: 'sprout', waterFrequencyDays: 2,
+    sunHours: 6, season: 'cool',
+    tips: ['Doesn\'t transplant well — sow in final pot', 'Seeds (dill seed) and fronds both usable', 'Attracts beneficial insects']
+  }
+];
 
 // ---- State ----
 let state = { plants: [], varieties: [], settings: {} };
@@ -501,6 +621,11 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       state = JSON.parse(raw);
+      // Ensure varieties are up-to-date (merge any new defaults)
+      const existingIds = new Set(state.varieties.map(v => v.id));
+      for (const dv of DEFAULT_VARIETIES) {
+        if (!existingIds.has(dv.id)) state.varieties.push(structuredClone(dv));
+      }
     } else {
       state = { plants: [], varieties: structuredClone(DEFAULT_VARIETIES), settings: {} };
       saveState();
@@ -518,6 +643,162 @@ function saveState() {
 // ---- ID generation ----
 function newId() {
   return crypto.randomUUID();
+}
+
+// ---- Variety helpers ----
+function getVariety(varietyId) {
+  return state.varieties.find(v => v.id === varietyId) || DEFAULT_VARIETIES.find(v => v.id === varietyId);
+}
+
+// ---- Plant helpers ----
+function createPlant(varietyId, location, plantedDate) {
+  return {
+    id: newId(),
+    varietyId,
+    location,
+    stage: 'germinating',
+    plantedDate: plantedDate || new Date().toISOString().slice(0, 10),
+    sproutedDate: null,
+    transplantedDate: null,
+    firstHarvestDate: null,
+    waterings: [],
+    notes: '',
+    photos: []
+  };
+}
+
+function addPlant(plant) {
+  state.plants.push(plant);
+  saveState();
+}
+
+function updatePlant(id, updates) {
+  const idx = state.plants.findIndex(p => p.id === id);
+  if (idx !== -1) {
+    Object.assign(state.plants[idx], updates);
+    saveState();
+  }
+}
+
+function deletePlant(id) {
+  state.plants = state.plants.filter(p => p.id !== id);
+  saveState();
+}
+
+function getPlant(id) {
+  return state.plants.find(p => p.id === id);
+}
+
+function waterPlant(id, note = '') {
+  const plant = getPlant(id);
+  if (plant) {
+    plant.waterings.push({ date: new Date().toISOString(), note });
+    saveState();
+  }
+}
+
+function advanceStage(id) {
+  const plant = getPlant(id);
+  if (!plant) return;
+  const idx = STAGES.indexOf(plant.stage);
+  if (idx < STAGES.length - 1) {
+    plant.stage = STAGES[idx + 1];
+    const now = new Date().toISOString().slice(0, 10);
+    if (plant.stage === 'seedling') plant.sproutedDate = now;
+    else if (plant.stage === 'transplanted') plant.transplantedDate = now;
+    else if (plant.stage === 'harvesting') plant.firstHarvestDate = now;
+    saveState();
+  }
+}
+
+// ---- Date helpers ----
+function daysSince(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return Math.floor((now - d) / 86400000);
+}
+
+function daysBetween(a, b) {
+  return Math.floor((new Date(b) - new Date(a)) / 86400000);
+}
+
+function needsWater(plant) {
+  const variety = getVariety(plant.varietyId);
+  if (!variety || plant.stage === 'done') return false;
+  if (plant.waterings.length === 0) return true;
+  const lastWatering = plant.waterings[plant.waterings.length - 1].date;
+  return daysSince(lastWatering.slice(0, 10)) >= variety.waterFrequencyDays;
+}
+
+function getExpectedMilestone(plant) {
+  const variety = getVariety(plant.varietyId);
+  if (!variety) return null;
+  const planted = new Date(plant.plantedDate);
+  const today = new Date();
+
+  if (plant.stage === 'germinating') {
+    const expectedSprout = new Date(planted);
+    expectedSprout.setDate(expectedSprout.getDate() + variety.germinationDays[1]);
+    const daysLeft = Math.ceil((expectedSprout - today) / 86400000);
+    return { label: 'Sprout expected', days: daysLeft };
+  }
+  if (plant.stage === 'seedling' && variety.trayToPotWeeks) {
+    const sprout = new Date(plant.sproutedDate || plant.plantedDate);
+    const expectedTransplant = new Date(sprout);
+    expectedTransplant.setDate(expectedTransplant.getDate() + variety.trayToPotWeeks[1] * 7);
+    const daysLeft = Math.ceil((expectedTransplant - today) / 86400000);
+    return { label: 'Transplant ready', days: daysLeft };
+  }
+  if (['transplanted', 'flowering'].includes(plant.stage)) {
+    const fromDate = new Date(variety.harvestFrom === 'transplant'
+      ? (plant.transplantedDate || plant.plantedDate)
+      : (plant.sproutedDate || plant.plantedDate));
+    const expectedHarvest = new Date(fromDate);
+    expectedHarvest.setDate(expectedHarvest.getDate() + variety.daysToHarvest[1]);
+    const daysLeft = Math.ceil((expectedHarvest - today) / 86400000);
+    return { label: 'Harvest expected', days: daysLeft };
+  }
+  return null;
+}
+
+function lastWateredText(plant) {
+  if (plant.waterings.length === 0) return 'Never';
+  const d = daysSince(plant.waterings[plant.waterings.length - 1].date.slice(0, 10));
+  if (d === 0) return 'Today';
+  if (d === 1) return 'Yesterday';
+  return `${d} days ago`;
+}
+
+// ---- Export / Import ----
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sprout-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (imported.plants && imported.varieties) {
+        state = imported;
+        saveState();
+        switchView('dashboard');
+        alert('Data imported successfully!');
+      } else {
+        alert('Invalid Sprout data file.');
+      }
+    } catch {
+      alert('Failed to parse JSON file.');
+    }
+  };
+  reader.readAsText(file);
 }
 
 // ---- Navigation ----
